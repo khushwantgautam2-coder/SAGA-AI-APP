@@ -1,0 +1,10 @@
+*.pth
+*.zip
+images/
+*.csv
+*.docx
+__pycache__/
+*.pyc
+.DS_Store
+venv/
+.venv/

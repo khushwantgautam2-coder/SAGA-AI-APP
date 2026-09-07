@@ -1,0 +1,8 @@
+streamlit
+torch
+torchvision
+opencv-python-headless
+pandas
+numpy
+pillow
+huggingface_hub
