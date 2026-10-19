@@ -6,3 +6,4 @@ pandas
 numpy
 pillow
 huggingface_hub
+xlsxwriter>=3.2,<4

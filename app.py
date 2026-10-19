@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+from batch_processing import render_batch_processing
 
 from cvms_core import (
     DEVICE,
@@ -165,7 +166,7 @@ with st.sidebar:
         net2_path = st.text_input("Net2 weights (landmarks) — manual path", value="best_net2.pth")
 
     st.divider()
-    mode = st.radio("Mode", ["Single Image", "Batch Evaluation"])
+    mode = st.radio("Mode", ["Single Image", "Batch Processing", "Batch Evaluation"])
 
 models_ready = os.path.exists(net1_path) and os.path.exists(net2_path)
 if not models_ready:
@@ -210,6 +211,9 @@ if mode == "Single Image":
         st.error("Select valid model weight files in the sidebar before running inference.")
     else:
         st.info("Upload an image to run the pipeline.")
+
+elif mode == 'Batch Processing':
+    render_batch_processing(net1_path, net2_path, models_ready, load_net1, load_net2)
 
 else:
     st.markdown('<div style="font-size:15px; font-weight:600;">Batch Evaluation</div>', unsafe_allow_html=True)

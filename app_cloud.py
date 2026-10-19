@@ -1,7 +1,7 @@
-"""SAGA-AI -- simplified public deployment (Streamlit Community Cloud).
+"""SAGA-AI -- single-image and batch deployment (Streamlit Community Cloud).
 
-No sidebar, no batch evaluation, no LAN share card (meaningless in a hosted
-container). Weights are fixed and pulled from a private Hugging Face repo via
+Single-image and batch prediction, without a sidebar or LAN share card.
+Weights are fixed and pulled from a private Hugging Face repo via
 ensure_weights_from_hf(). For the full-featured local/Mac app, see app.py.
 """
 
@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import streamlit as st
+from batch_processing import render_batch_processing
 
 from cvms_core import (
     app_header,
@@ -39,8 +40,11 @@ models_ready = bool(net1_path and net2_path)
 
 app_header(models_ready)
 st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
+mode = st.radio('Mode', ['Single Image', 'Batch Processing'], horizontal=True)
 
-if not models_ready:
+if mode == 'Batch Processing':
+    render_batch_processing(net1_path, net2_path, models_ready, load_net1, load_net2)
+elif not models_ready:
     st.error("Model weights are not available. Please check the deployment configuration.")
 else:
     st.markdown('<div style="font-size:15px; font-weight:600; margin-bottom: 12px;">Single Image Inference</div>', unsafe_allow_html=True)
@@ -52,6 +56,9 @@ else:
 
         file_bytes = np.frombuffer(uploaded.read(), np.uint8)
         img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+        if img_bgr is None:
+            st.error('Image could not be decoded. Use a valid JPG or PNG file.')
+            st.stop()
 
         with st.spinner("Running inference..."):
             result = run_inference(net1, net2, img_bgr)
