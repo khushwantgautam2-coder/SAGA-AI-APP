@@ -446,11 +446,13 @@ def stat_cards_single(score, stage):
     )
 
 
-def lightbox_image(b64, caption):
+def lightbox_image(b64, caption, compact=False):
+    frame_style = 'max-width:360px; margin:0 auto;' if compact else ''
+    image_style = 'max-height:300px; object-fit:contain;' if compact else ''
     st.markdown(
         f"""
-        <div class="cvms-lightbox">
-            <img src="data:image/png;base64,{b64}" style="width:100%; display:block; border-radius:6px;" />
+        <div class="cvms-lightbox" style="{frame_style}">
+            <img src="data:image/png;base64,{b64}" style="width:100%; display:block; border-radius:6px; {image_style}" />
         </div>
         <div class="cvms-caption">{caption}</div>
         """,

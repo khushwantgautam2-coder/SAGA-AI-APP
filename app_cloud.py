@@ -71,9 +71,9 @@ else:
 
             col1, col2 = st.columns(2)
             with col1:
-                lightbox_image(bgr_to_b64(img_bgr), "Original X-ray")
+                lightbox_image(bgr_to_b64(img_bgr), "Original X-ray", compact=True)
             with col2:
-                lightbox_image(bgr_to_b64(vis), "Cropped region with predicted landmarks")
+                lightbox_image(bgr_to_b64(vis), "Cropped region with predicted landmarks", compact=True)
 
             st.markdown("<div style='height: 22px;'></div>", unsafe_allow_html=True)
             stat_cards_single(score, stage)
