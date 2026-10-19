@@ -58,11 +58,18 @@ def process_batch(uploads, net1, net2, progress=None):
 
 def excel_report(results, landmarks):
     """Return XLSX bytes; filenames remain literal text, never Excel formulas."""
+    report = results[['Filename', 'Stage', 'CVMS score']].copy()
+    report['Stage'] = report['Stage'].map(lambda value: int(str(value).removeprefix('CS')) if pd.notna(value) else None)
+    report = report.rename(columns={'CVMS score': 'QCVMS'})
     output = BytesIO()
     with xlsxwriter.Workbook(output, {'in_memory': True, 'strings_to_formulas': False, 'strings_to_urls': False}) as workbook:
-        header = workbook.add_format({'bold': True, 'bg_color': '#193B43', 'font_color': '#FFFFFF', 'border': 1})
+        header = workbook.add_format({'font_name': 'Calibri', 'font_size': 11})
         number = workbook.add_format({'num_format': '0.0000'})
-        for name, frame in [('Results', results), ('Landmarks', landmarks)]:
+        failures = results.loc[results['Status'] != 'Success', ['Image ID', 'Filename', 'Error']]
+        sheets = [('Results', report), ('Landmarks', landmarks)]
+        if not failures.empty:
+            sheets.append(('Errors', failures))
+        for name, frame in sheets:
             sheet = workbook.add_worksheet(name)
             sheet.freeze_panes(1, 2)
             sheet.write_row(0, 0, list(frame.columns), header)
@@ -73,10 +80,11 @@ def excel_report(results, landmarks):
                     if isinstance(value, str):
                         sheet.write_string(r, c, value)
                     else:
-                        sheet.write(r, c, value, number if frame.columns[c] == 'CVMS score' else None)
-            sheet.autofilter(0, 0, len(frame), len(frame.columns) - 1)
+                        sheet.write(r, c, value, number if frame.columns[c] == 'QCVMS' else None)
+            if name != 'Results':
+                sheet.autofilter(0, 0, len(frame), len(frame.columns) - 1)
             for c, column in enumerate(frame.columns):
-                sheet.set_column(c, c, 38 if column == 'Filename' else 65 if column == 'Error' else 17)
+                sheet.set_column(c, c, 20 if column == 'Filename' else 65 if column == 'Error' else 12)
         summary = workbook.add_worksheet('Summary')
         successful = int((results['Status'] == 'Success').sum())
         values = [
@@ -88,12 +96,13 @@ def excel_report(results, landmarks):
             ('Landmark index', 'Zero-based; the same order as the original model.'),
             ('Stage thresholds', 'CS1 < 1.7404; CS2 < 2.623; CS3 < 3.5199; otherwise CS4.'),
             ('Score calculation', 'Original Chen formula implementation; both ratios clamped to [0.1, 4.0].'),
+            ('Failed predictions', 'Filename is retained in Results with blank Stage and QCVMS; see Errors for the reason.'),
         ]
         for r, values_row in enumerate(values):
             summary.write_row(r, 0, values_row, header if r == 0 else None)
         summary.set_column(0, 0, 30)
         summary.set_column(1, 1, 72, workbook.add_format({'text_wrap': True, 'valign': 'top'}))
-        for r in range(8, 12):
+        for r in range(8, 13):
             summary.set_row(r, 32)
         summary.freeze_panes(1, 0)
     return output.getvalue()
@@ -104,7 +113,7 @@ def render_batch_processing(net1_path, net2_path, models_ready, load_net1, load_
     st.caption('Upload full lateral cephalometric X-rays. Ground-truth annotations are not required.')
     uploads = st.file_uploader('Upload images', type=['jpg', 'jpeg', 'png'], accept_multiple_files=True, key='batch_images')
     # Persist a finished run across download/rerender, but never display results for a different selection.
-    signature = hashlib.sha256()
+    signature = hashlib.sha256(b'filename-stage-qcvms-v2')
     for item in uploads:
         signature.update(item.name.encode())
         signature.update(hashlib.sha256(item.getvalue()).digest())

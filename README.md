@@ -2,7 +2,7 @@
 
 Both entry points now include **Batch Processing**: upload multiple JPG/PNG images, process them sequentially, and download an Excel workbook. No ground-truth CSV is needed for batch predictions. The local app retains its existing Batch Evaluation mode.
 
-The workbook contains Results (one row for every upload, including failures), Landmarks (13 named points per successful image, in crop and full-image coordinates), and Summary (counts and coordinate/scoring definitions). Failed images have blank scores and stages. Image IDs distinguish duplicate filenames. Results remain available through Streamlit reruns and downloads; selecting different images clears the previous report.
+The Results sheet matches the requested layout: **Filename | Stage | QCVMS**, starting at A1. Stage is a number from 1 to 4; QCVMS displays four decimal places. Landmarks contains 13 named points per successful image in crop and full-image coordinates. Summary contains counts and definitions. Failed images keep their filename with blank Stage and QCVMS, with reasons in a separate Errors sheet when needed. Results remain available through Streamlit reruns and downloads; selecting different images clears the previous report.
 
 ## Run locally
 
